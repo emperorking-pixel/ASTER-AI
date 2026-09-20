@@ -1,0 +1,40 @@
+<!--
+  Merge these into android/app/src/main/AndroidManifest.xml.
+  Permissions go as direct children of <manifest>.
+  The two <service> blocks go inside <application>, alongside your
+  existing <activity> entry.
+-->
+
+<!-- ===== Permissions (put inside <manifest>, above <application>) ===== -->
+
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+
+<!-- ===== Services (put inside <application>, alongside your MainActivity) ===== -->
+
+<!-- flutter_background_service's own service, with the type it will run as -->
+<service
+    android:name="id.flutter.flutter_background_service.BackgroundService"
+    android:exported="false"
+    android:foregroundServiceType="specialUse">
+    <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="personal_assistant_notification_buffer" />
+</service>
+
+<!-- notification_listener_service's service -- this is what makes the
+     "Notification access" toggle appear in Android's special app access list -->
+<service
+    android:label="Aster notifications"
+    android:name="notification.listener.service.NotificationListener"
+    android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+    android:exported="true">
+    <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService" />
+    </intent-filter>
+</service>
