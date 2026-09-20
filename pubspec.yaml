@@ -1,16 +1,16 @@
-Run this, which fetches current compatible versions automatically:
-#
-#   flutter pub add http flutter_secure_storage speech_to_text flutter_tts \
-#     flutter_background_service flutter_background_service_android \
-#     flutter_local_notifications notification_listener_service path_provider
-#
-# That command edits pubspec.yaml for you. The dependencies block will end up
-# looking roughly like this (exact version numbers will be newer by the time
-# you run it -- that's expected and fine):
+name: aster_ai_assistant
+description: "A private personal AI assistant."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
+
+  cupertino_icons: ^1.0.8
   http: ^1.2.0
   flutter_secure_storage: ^9.2.2
   speech_to_text: ^7.0.0
@@ -20,3 +20,11 @@ dependencies:
   flutter_local_notifications: ^18.0.0
   notification_listener_service: ^0.3.5
   path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
