@@ -1,7 +1,5 @@
 name: Build APK
 
-# Trigger it two ways: automatically on every push to main, or manually
-# from GitHub's "Actions" tab (useful from your phone — no push needed).
 on:
   workflow_dispatch:
   push:
@@ -22,8 +20,69 @@ jobs:
         with:
           channel: 'stable'
 
-      - run: flutter pub get
+      # Your repo has lib/ and pubspec.yaml but no android/ folder yet.
+      # This generates it (using the name: already in pubspec.yaml) without
+      # touching lib/ or pubspec.yaml at all.
+      - name: Generate missing android/ folder
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create --platforms=android --org com.aster.app .
+          fi
 
+      # Automatically inserts Aster's permissions and services into the
+      # freshly generated AndroidManifest.xml -- no manual editing needed.
+      - name: Patch AndroidManifest.xml
+        run: |
+          python3 << 'PYEOF'
+          import re
+
+          path = "android/app/src/main/AndroidManifest.xml"
+          with open(path) as f:
+              content = f.read()
+
+          permissions = '''
+              <uses-permission android:name="android.permission.RECORD_AUDIO" />
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+              <uses-permission android:name="android.permission.WAKE_LOCK" />
+          '''
+
+          services = '''
+              <service
+                  android:name="id.flutter.flutter_background_service.BackgroundService"
+                  android:exported="false"
+                  android:foregroundServiceType="specialUse">
+                  <property
+                      android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                      android:value="personal_assistant_notification_buffer" />
+              </service>
+              <service
+                  android:label="Aster notifications"
+                  android:name="notification.listener.service.NotificationListener"
+                  android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+                  android:exported="true">
+                  <intent-filter>
+                      <action android:name="android.service.notification.NotificationListenerService" />
+                  </intent-filter>
+              </service>
+          '''
+
+          if "RECORD_AUDIO" not in content:
+              content = re.sub(r'(<manifest[^>]*>)', r'\1' + permissions, content, count=1)
+
+          if "NotificationListener" not in content:
+              content = content.replace("</application>", services + "</application>")
+
+          with open(path, "w") as f:
+              f.write(content)
+
+          print("Manifest patched.")
+          PYEOF
+
+      - run: flutter pub get
       - run: flutter build apk --debug
 
       - uses: actions/upload-artifact@v4
